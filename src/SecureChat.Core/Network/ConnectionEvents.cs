@@ -20,3 +20,6 @@ public sealed class RecoverableReceiveException(string message, Exception? inner
 // Prima file, mora da potrosi tacno velicinu encrypted headera (B) iz toka, cak i kada file odbije.
 // Inace otpada sinhronizacija sa porukom. Ako greska ne kvari tok - RRE, sve ostalo prekida vezu
 public delegate Task<string> FileReceiveHandler(MessageHeader Header, Stream payload, CancellationToken ct);
+
+// Poslata Text ili Control poruka. Tek nakon uspesnog slanja
+public sealed record SentMessage(MessageHeader Header, string Text);

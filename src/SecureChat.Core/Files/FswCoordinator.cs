@@ -229,7 +229,7 @@ public sealed class FswCoordinator : IAsyncDisposable
 
         if(previous == FswLocalState.Active)
             Raise(FswEventKind.WatchingStopped, $"Automatsko slanje je zaustavljeno na zahtev ({peer}).");
-        else if (previous == FswLocalState.AwaitingApproval)
+        else if(previous == FswLocalState.AwaitingApproval)
             Raise(FswEventKind.ApprovalCancelled, $"{peer} je otkazao zahtev za automatsko slanje.");
 
         await SendCommandAsync(FswCommands.Stopped);
@@ -245,7 +245,7 @@ public sealed class FswCoordinator : IAsyncDisposable
             watcher.Activity += OnWatcherActivity;
             watcher.Start();
         }
-        catch(Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or FileTransferException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or FileTransferException)
         {
             if(watcher is not null) await watcher.DisposeAsync();
             LocalState = FswLocalState.Inactive;

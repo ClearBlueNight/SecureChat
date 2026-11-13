@@ -8,6 +8,9 @@ public static class AppPaths
 
     public const string ReceivedFolderName = "Received";
 
+    public const string HistoryFolderName = "history";
+    public const string HistoryFileName = "history.dat";
+    public const string LogsFolderName = "logs";
     public static string ReceivedFilesFolder(string userFolder) => Path.Combine(userFolder, ReceivedFolderName);
 
     public static string DefaultRoot =>
@@ -32,4 +35,8 @@ public static class AppPaths
     }
 
     public static string WatchFolder(string userFolder, FswSettings settings) => Path.Combine(userFolder, settings.WatchFolderName);
+
+    public static string HistoryFile(string userFolder) => Path.Combine(userFolder, HistoryFolderName, HistoryFileName);
+
+    public static string LogsFolder(string userFolder) => Path.Combine(userFolder, LogsFolderName);
 }

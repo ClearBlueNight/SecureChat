@@ -89,7 +89,7 @@ public sealed class FileWatcherService: IAsyncDisposable
                 catch (Exception ex) { Report(WatcherActivityKind.Failed, path, ex); }
             }
         }
-        catch(OperationCanceledException) { /* stopped */}
+        catch (OperationCanceledException) { /* stopped */}
     }
 
     private async Task ProcessAsync(string path)

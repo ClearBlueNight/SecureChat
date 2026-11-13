@@ -22,7 +22,7 @@ public sealed class ConnectionListener : IDisposable
 
         var listener = new TcpListener(IPAddress.Any, port) { ExclusiveAddressUse = true};
         try{ listener.Start(); }
-        catch(SocketException ex) { throw NetworkErrors.ForListen(ex, port); }
+        catch (SocketException ex) { throw NetworkErrors.ForListen(ex, port); }
         return new ConnectionListener(listener);
     }
     // Ceka jednu dolaznu vezu. Dispose ili otkazivanje tokena prekida cekanje izuzetkom 

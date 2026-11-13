@@ -22,7 +22,7 @@ public static class HeaderSerializer
     {
         MessageHeader? header;
         try{ header = JsonSerializer.Deserialize<MessageHeader>(json, Options); }
-        catch( JsonException ex ) { throw new ProtocolException("Header nije ispravan JSON", ex); }
+        catch ( JsonException ex ) { throw new ProtocolException("Header nije ispravan JSON", ex); }
 
         if(header is null) throw new ProtocolException("Header je prazan");
         HeaderValidator.Validate(header);

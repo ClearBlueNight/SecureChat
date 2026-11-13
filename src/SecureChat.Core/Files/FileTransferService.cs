@@ -16,6 +16,8 @@ public sealed class FileTransferService
 
     public event Action<FileProgress>? Progress;
 
+    public event Action<SentFile>? FileSent;
+
     // Gde smestam primljene file'ove. Moze promena i pri aktivnoj vezi
     public string ReceivedFolder
     {
@@ -83,6 +85,7 @@ public sealed class FileTransferService
             if(sent != plainLength) throw ChangedDuringSend(name); // header vec poslat, veza bye bye
         }, ct);
         sendReport(plainLength);
+        FileSent?.Invoke(new SentFile(header, info.FullName, plainLength));
     }
 
     private async Task<string> ReceiveAsync(MessageHeader header, Stream network, CancellationToken ct)
@@ -101,7 +104,7 @@ public sealed class FileTransferService
             {
                 Integrity.VerifyHash(header.Hash, sha.Finish());
             }
-            catch( IntegrityException ex )
+            catch (IntegrityException ex)
             {
                 throw new RecoverableReceiveException(ex.Message, ex);
             }
@@ -123,7 +126,7 @@ public sealed class FileTransferService
             Directory.CreateDirectory(Path.GetDirectoryName(partPath)!);
             part = new FileStream(partPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, FileBufferSize, useAsync: true);
         }
-        catch(Exception ex) when (IsDiskError(ex)) { diskError = ex; }
+        catch (Exception ex) when (IsDiskError(ex)) { diskError = ex; }
 
         try
         {
@@ -133,7 +136,7 @@ public sealed class FileTransferService
             {
                 int want = (int)Math.Min(buffer.Length, size - done);
                 int read = await network.ReadAsync(buffer.AsMemory(0, want), ct);
-                if (read == 0) throw new ProtocolException("Veza je prekinuta usred poruke.");
+                if(read == 0) throw new ProtocolException("Veza je prekinuta usred poruke.");
                 done += read;  
 
                 if(diskError is null)
@@ -150,7 +153,7 @@ public sealed class FileTransferService
         }
         finally
         {
-            if (part is not null)
+            if(part is not null)
             {
                 try { await part.DisposeAsync();}
                 catch (Exception ex) when (IsDiskError(ex)) { diskError ??= ex; }
@@ -183,8 +186,8 @@ public sealed class FileTransferService
             completed = true;
             return outputPath;
         }
-        catch(CryptoException ex) { throw new RecoverableReceiveException(ex.Message, ex); }
-        catch(Exception ex) when (IsDiskError(ex)) { throw DiskFailure(ex); }
+        catch (CryptoException ex) { throw new RecoverableReceiveException(ex.Message, ex); }
+        catch (Exception ex) when (IsDiskError(ex)) { throw DiskFailure(ex); }
         finally
         {
             if(!completed) TryDelete(outputPath);
@@ -226,7 +229,7 @@ public sealed class FileTransferService
             {
                 return new FileStream(candidate, FileMode.CreateNew, FileAccess.Write, FileShare.None, FileBufferSize, useAsync: true);
             }
-            catch(IOException) when (File.Exists(candidate)) {}
+            catch (IOException) when (File.Exists(candidate)) {}
         }
     }
     // Akko proces za upis traje, otvaranje ne uspeva
@@ -236,7 +239,7 @@ public sealed class FileTransferService
         {
             return new FileStream(info.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, FileBufferSize, useAsync: true);            
         }
-        catch( Exception ex ) when(IsDiskError(ex))
+        catch (Exception ex) when(IsDiskError(ex))
         {
             throw new FileTransferException($"File '{info}' nije moguce otvoriti: {ex.Message}.", ex);
         }
@@ -262,6 +265,6 @@ public sealed class FileTransferService
     private static void TryDelete(string path)
     {
         try { File.Delete(path); }
-        catch(Exception ex) when(IsDiskError(ex)) {}
+        catch (Exception ex) when(IsDiskError(ex)) {}
     }
 }

@@ -33,6 +33,7 @@ public sealed record AppSettings
 
     public NetworkSettings Network { get; init; } = new();
     public FswSettings Fsw { get; init; } = new();
+    public LoggingSettings Logging { get; init;} = new();
     public static AppSettings Load(string path)
     {
         if(!File.Exists(path)) return new AppSettings();
@@ -43,10 +44,12 @@ public sealed record AppSettings
             settings = settings with 
             { 
                 Network = settings.Network ?? new NetworkSettings(),
-                Fsw = settings.Fsw ?? new FswSettings()
+                Fsw = settings.Fsw ?? new FswSettings(),
+                Logging = settings.Logging ?? new LoggingSettings()
             };
             settings.Network.Validate();
             settings.Fsw.Validate();
+            settings.Logging.Validate();
             return settings;
         }
         catch (JsonException ex)

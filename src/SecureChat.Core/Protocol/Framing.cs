@@ -38,7 +38,7 @@ public static class Framing
     // Cita ceo sifrat u memoriju (samo za text i Control)
     public static async Task<byte[]> ReadPayloadAsync(Stream stream, MessageHeader header, CancellationToken ct = default)
     {
-        if (header.EncryptedSize > ProtocolLimits.MaxMessagePayloadBytes)
+        if(header.EncryptedSize > ProtocolLimits.MaxMessagePayloadBytes)
             throw new ProtocolException("Payload je prevelik za citanje u memoriju.");
         
         byte[] payload = new byte[header.EncryptedSize];
@@ -56,7 +56,7 @@ public static class Framing
         {
             int want = (int)Math.Min(buffer.Length, count - done);
             int read = await source.ReadAsync(buffer.AsMemory(0, want), ct);
-            if (read == 0) throw Truncated();
+            if(read == 0) throw Truncated();
             await destination.WriteAsync(buffer.AsMemory(0, read), ct);
             done += read;
             progress?.Invoke(done);

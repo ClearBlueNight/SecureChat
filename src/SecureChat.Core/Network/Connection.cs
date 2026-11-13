@@ -23,8 +23,11 @@ public sealed class Connection : IDisposable
 
     public event Action<ReceivedFile>? FileReceived;
 
+    public event Action<SentMessage>? MessageSent;
+
     // Dok je null - file'ove preskace (ReceiveFailed)
     public FileReceiveHandler? FileHandler { get; set; }
+
 
     public Connection(Stream stream, string localName, byte[] key, string remoteEndpoint = "", IDisposable? owner = null)
     {
@@ -50,12 +53,14 @@ public sealed class Connection : IDisposable
 
     public async Task SendTextAsync(ContentType type, string text, CipherAlgorithm algorithm, CancellationToken ct = default)
     {
+        // Create & Validate pre locka
         var ( header, payload ) = TextMessageCodec.Create(type, LocalName, text, algorithm, _key);
         await SendAsync( async (stream, token) =>
         {
             await Framing.WriteHeaderAsync(stream, header, token);
             await stream.WriteAsync(payload, token);
         }, ct);
+        MessageSent?.Invoke(new SentMessage(header, text));
     }
 
     public async Task SendAsync(Func<Stream, CancellationToken, Task> write, CancellationToken ct = default)
@@ -102,18 +107,18 @@ public sealed class Connection : IDisposable
                 await HandleAsync(header);
             }
         }
-        catch ( OperationCanceledException ) {}
-        catch ( Exception ex ) when ( ex is IOException or ObjectDisposedException or SocketException)
+        catch (OperationCanceledException) {}
+        catch (Exception ex) when (ex is IOException or ObjectDisposedException or SocketException)
         {
             info = _cts.IsCancellationRequested 
                 ? new DisconnectInfo("Veza je zatvorena.", null)
                 : new DisconnectInfo("Veza je prekinuta.", ex);
         }
-        catch(ProtocolException ex)
+        catch (ProtocolException ex)
         {
             info = new DisconnectInfo($"Veza je prekinuta zbog narusenog protokola: {ex.Message}", ex);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             info = new DisconnectInfo($"Neocekivana greska: {ex.Message}", ex);
         }
@@ -160,7 +165,7 @@ public sealed class Connection : IDisposable
         {
             SavedPath = await handler(header, _stream, _cts.Token);
         }
-        catch( RecoverableReceiveException ex)
+        catch (RecoverableReceiveException ex)
         {
             ReceiveFailed?.Invoke(new ReceiveFailure(header, ex));
             return;
