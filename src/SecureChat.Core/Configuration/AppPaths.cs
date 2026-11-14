@@ -26,10 +26,11 @@ public static class AppPaths
             throw new ArgumentException("Korisnicko ime sadrzi nedozvoljene znakove.", nameof(name));
         return trimmed;
     }
+    public static string UserFolderPath(string userName, string? root = null) => Path.Combine(root ?? DefaultRoot, NormalizeUserName(userName));
 
     public static string ForUser(string userName, string? root = null)
     {
-        string path = Path.Combine(root ?? DefaultRoot, NormalizeUserName(userName));
+        string path = UserFolderPath(userName, root);
         Directory.CreateDirectory(path);
         return path;
     }

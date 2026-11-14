@@ -20,6 +20,8 @@ public sealed class ActivityLogger
 
     public event Action<Exception>? WriteFailed;
 
+    public event Action<string>? Written;
+
     public ActivityLogger(string folder, Func<DateTime>? now = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(folder);
@@ -40,19 +42,46 @@ public sealed class ActivityLogger
         DateTime now = _now();
         string line = string.Concat(
             now.ToString(TimestampFormat, CultureInfo.InvariantCulture),
-            "[", LevelName(level), "]", Sanitize(eventName), ": ", Sanitize(description), Environment.NewLine);
+            " [", LevelName(level), "] ", Sanitize(eventName), ": ", Sanitize(description), Environment.NewLine);
 
         try
         {
             lock(_lock)
             {
                 Directory.CreateDirectory(_folder);
-                File.AppendAllText(FileFor(now), line, Utf8);
+                File.AppendAllText(FileFor(now), line + Environment.NewLine, Utf8);
             }
         }
         catch(Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             WriteFailed?.Invoke(ex);
+            return;
+        }
+        Written?.Invoke(line);
+    }
+
+    public IReadOnlyList<string> ReadLines(DateTime day, int maxLines = 1000)
+    {
+        string path = FileFor(day);
+        if(!File.Exists(path)) return[];
+
+        try
+        {
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(stream, Utf8);
+            var lines = new Queue<string>();
+            while(reader.ReadLine() is {} line)
+            {
+                if(lines.Count == maxLines) lines.Dequeue();
+                lines.Enqueue(line);
+            }
+
+            return lines.ToList();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            WriteFailed?.Invoke(ex);
+            return [];
         }
     }
 

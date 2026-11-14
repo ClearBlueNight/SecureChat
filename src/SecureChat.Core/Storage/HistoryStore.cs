@@ -142,7 +142,11 @@ public sealed class HistoryStore : IDisposable
 
     public static void Delete(string path)
     {
-        try { File.Delete(path); }
+        try 
+        { 
+            if(File.Exists(path))
+                File.Delete(path);
+        }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             throw new HistoryException($"Brisanje istorije nije uspelo: {ex.Message}", ex);
