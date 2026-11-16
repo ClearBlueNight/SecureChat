@@ -1,4 +1,3 @@
-using System.Security;
 using SecureChat.Core.Crypto;
 using SecureChat.Core.Network;
 using SecureChat.Core.Protocol;

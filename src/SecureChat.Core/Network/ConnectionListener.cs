@@ -21,7 +21,7 @@ public sealed class ConnectionListener : IDisposable
         ArgumentOutOfRangeException.ThrowIfGreaterThan(port, NetworkValidation.MaxPort);
 
         var listener = new TcpListener(IPAddress.Any, port) { ExclusiveAddressUse = true};
-        try{ listener.Start(); }
+        try { listener.Start(); }
         catch (SocketException ex) { throw NetworkErrors.ForListen(ex, port); }
         return new ConnectionListener(listener);
     }

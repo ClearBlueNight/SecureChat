@@ -1,8 +1,5 @@
 using System.Buffers.Binary;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -184,7 +181,10 @@ public sealed class HistoryStore : IDisposable
             ObjectDisposedException.ThrowIf(_disposed, this);
             IEnumerable<HistoryEntry> query = _entries;
             if(!string.IsNullOrWhiteSpace(peer))
-                query = query.Where(e => string.Equals(e.Peer, peer.Trim(), StringComparison.OrdinalIgnoreCase));
+            {
+                string wanted = PeerNames.Normalize(peer);
+                query = query.Where(e => string.Equals(PeerNames.Normalize(e.Peer), wanted, StringComparison.OrdinalIgnoreCase));
+            }
             if(!string.IsNullOrWhiteSpace(text))
             {
                 string needle = text.Trim();
@@ -199,7 +199,7 @@ public sealed class HistoryStore : IDisposable
         lock(_lock)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            return _entries.Select(e => e.Peer)
+            return _entries.Select(e => PeerNames.Normalize(e.Peer))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .Order(StringComparer.CurrentCultureIgnoreCase)
                 .ToList();

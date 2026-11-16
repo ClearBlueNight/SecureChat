@@ -21,7 +21,7 @@ public static class HeaderSerializer
     public static MessageHeader Deserialize(ReadOnlySpan<byte> json)
     {
         MessageHeader? header;
-        try{ header = JsonSerializer.Deserialize<MessageHeader>(json, Options); }
+        try  { header = JsonSerializer.Deserialize<MessageHeader>(json, Options); }
         catch ( JsonException ex ) { throw new ProtocolException("Header nije ispravan JSON", ex); }
 
         if(header is null) throw new ProtocolException("Header je prazan");

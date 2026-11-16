@@ -1,4 +1,3 @@
-using System.Data;
 using System.Net.Sockets;
 using SecureChat.Core.Configuration;
 using SecureChat.Core.Crypto;
@@ -57,6 +56,21 @@ public sealed class ChatController : IAsyncDisposable
     public string RemoteEndpoint
     {
         get { lock(_gate) return _session?.Connection.RemoteEndpoint ?? ""; }
+    }
+
+    public int? ListeningPort
+    {
+        get { lock(_gate) return _listener?.Port; }
+    }
+
+    public FswLocalState FswWatchState
+    {
+        get { lock(_gate) return _session?.Fsw.LocalState ?? FswLocalState.Inactive; }
+    }
+
+    public FswRemoteState FswRequestState
+    {
+        get { lock(_gate) return _session?.Fsw.RemoteState ?? FswRemoteState.Idle; }
     }
 
     public CipherAlgorithm Algorithm
@@ -174,7 +188,7 @@ public sealed class ChatController : IAsyncDisposable
         catch(Exception ex)
         {
             lock (_gate) SetState(ControllerState.Idle);
-            if (ex is NetworkException) Logger.Error("CONNECT", ex.Message);
+            if(ex is NetworkException) Logger.Error("CONNECT", ex.Message);
             throw;
         }
 
